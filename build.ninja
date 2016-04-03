@@ -1,5 +1,5 @@
 cc = clang
-cflags = --std=c99 -Wall -Wextra -I.
+cflags = -g --std=c99 -Wall -Wextra -I. -Wno-missing-field-initializers
 
 rule cc
   command = $cc -c $cflags $in -o $out

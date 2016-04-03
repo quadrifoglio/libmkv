@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+
 /*
  * Element data type list
  */
@@ -116,6 +117,8 @@
 #define ELEMENT_DISPLAY_UINT                   0x54b2
 #define ELEMENT_ASPECT_RATIO_TYPE              0x54b3
 #define ELEMENT_COLOUR_SPACE                   0x2eb524
+#define ELEMENT_GAMMA_VALUE                    0x2fb523
+#define ELEMENT_FRAME_RATE                     0x2383e3
 #define ELEMENT_AUDIO                          0xe1
 #define ELEMENT_SAMPLING_FREQUENCY             0xb5
 #define ELEMENT_OUTPUT_SAMPLING_FREQUENCY      0x78b5
@@ -191,6 +194,8 @@
 #define ELEMENT_CHAP_PROCESS_TIME              0x6922
 #define ELEMENT_CHAP_PROCESS_DATA              0x6933
 
+typedef uint8_t bool;
+
 typedef struct mkv_buffer mkv_buffer_t;
 typedef struct mkv_register mkv_register_t;
 typedef struct mkv_element mkv_element_t;
@@ -215,12 +220,10 @@ struct mkv_register {
 /*
  * Actual parsed element
  */
-struct mvk_element {
+struct mkv_element {
 	mkv_register_t type;
 
 	mkv_element_t* parent;
-	size_t size;
-
 	mkv_buffer_t content;
 };
 
@@ -326,6 +329,8 @@ static const mkv_register_t ElementDisplayHeight               = {ELEMENT_DISPLA
 static const mkv_register_t ElementDisplayUint                 = {ELEMENT_DISPLAY_UINT, ELEMENT_TYPE_UINT, "DisplayUint"};
 static const mkv_register_t ElementAspectRatioType             = {ELEMENT_ASPECT_RATIO_TYPE, ELEMENT_TYPE_UINT, "AspectRatioType"};
 static const mkv_register_t ElementColourSpace                 = {ELEMENT_COLOUR_SPACE, ELEMENT_TYPE_BINARY, "ColourSpace"};
+static const mkv_register_t ElementGammaValue                  = {ELEMENT_GAMMA_VALUE, ELEMENT_TYPE_FLOAT, "ColourSpace"};
+static const mkv_register_t ElementFramerate                   = {ELEMENT_FRAME_RATE, ELEMENT_TYPE_FLOAT, "ColourSpace"};
 static const mkv_register_t ElementAudio                       = {ELEMENT_AUDIO, ELEMENT_TYPE_MASTER, "Audio"};
 static const mkv_register_t ElementSamplingFrequency           = {ELEMENT_SAMPLING_FREQUENCY, ELEMENT_TYPE_FLOAT, "SamplingFrequency"};
 static const mkv_register_t ElementOutputSamplingFrequency     = {ELEMENT_OUTPUT_SAMPLING_FREQUENCY, ELEMENT_TYPE_FLOAT, "OutputSamplingFrequency"};
@@ -402,13 +407,19 @@ static const mkv_register_t ElementChapProcessTime             = {ELEMENT_CHAP_P
 static const mkv_register_t ElementChapProcessData             = {ELEMENT_CHAP_PROCESS_DATA, ELEMENT_TYPE_BINARY, "ChapProcessData"};
 
 /*
+ * Main library calls
+ * Returns false (0) in case of failure
+ */
+bool           mkv_element_parse(mkv_buffer_t* buffer, mkv_element_t* element);
+void           mkv_element_free(mkv_element_t* element);
+
+/*
  * Element parsing functionality
  * The buffer parameter contains the data to parse
  * These functions return 0 in case of failure
  */
-uint32_t       mkv_element_id(mkv_buffer_t* buffer);
-size_t         mkv_element_size(mkv_buffer_t* buffer);
-mkv_buffer_t   mkv_element_content(mkv_buffer_t* buffer);
+size_t         mkv_element_id(mkv_buffer_t* buffer, uint32_t* id);
+size_t         mkv_element_size(mkv_buffer_t* buffer, size_t* size);
 
 /*
  * Get the element register corresponding to the specified ID
