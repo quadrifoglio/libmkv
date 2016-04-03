@@ -1,0 +1,15 @@
+cc = clang
+cflags = --std=c99 -Wall -Wextra -I.
+
+rule cc
+  command = $cc -c $cflags $in -o $out
+  description = CC $in
+
+rule ld
+  command = $cc $ldflags $in -o $out
+  description = LD $in
+
+build build/mkv.o: cc mkv.c
+build build/test.o: cc test.c
+
+build build/test: ld build/test.o build/mkv.o
